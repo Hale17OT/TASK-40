@@ -1,0 +1,87 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    volumes:
+      - ./src:/var/www/html
+      - harborbite-logs:/var/log/harborbite
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_NAME: HarborBite
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+      APP_KEY: ${APP_KEY:?Set APP_KEY in .env or environment — run php artisan key:generate}
+      APP_TIMEZONE: America/Chicago
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: harborbite
+      DB_USERNAME: harborbite
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      QUEUE_CONNECTION: database
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      LOG_CHANNEL: daily
+      LOG_LEVEL: debug
+      PAYMENT_HMAC_KEY: ${PAYMENT_HMAC_KEY:?Set PAYMENT_HMAC_KEY in .env}
+      DEVICE_FINGERPRINT_SALT: ${DEVICE_FINGERPRINT_SALT:?Set DEVICE_FINGERPRINT_SALT in .env}
+    networks:
+      - harborbite
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      - app
+    networks:
+      - harborbite
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: harborbite
+      POSTGRES_USER: harborbite
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U harborbite"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5433:5432"
+    networks:
+      - harborbite
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.50.0-jammy
+    working_dir: /tests
+    volumes:
+      - ./src/tests/E2E:/tests
+    depends_on:
+      - nginx
+    environment:
+      BASE_URL: http://nginx:80
+    networks:
+      - harborbite
+    profiles:
+      - testing
+
+volumes:
+  postgres-data:
+  harborbite-logs:
+
+networks:
+  harborbite:
+    driver: bridge
