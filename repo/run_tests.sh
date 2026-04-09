@@ -4,6 +4,24 @@ set -e
 echo "=== HarborBite Test Suite ==="
 echo ""
 
+# Wait for the app container to finish startup (composer install, migrations, seeding)
+echo "Waiting for app container to be ready..."
+for i in $(seq 1 120); do
+    if docker compose exec -T app test -f vendor/autoload.php 2>/dev/null; then
+        # Also wait for "HarborBite Ready" signal (migrations + seeding done)
+        if docker compose logs app 2>/dev/null | grep -q "HarborBite Ready"; then
+            echo "App container is ready."
+            break
+        fi
+    fi
+    if [ "$i" -eq 120 ]; then
+        echo "ERROR: App container did not become ready within 120 seconds."
+        docker compose logs app
+        exit 1
+    fi
+    sleep 1
+done
+
 # Test APP_KEY (valid 32-byte key for encryption in test suite)
 TEST_APP_KEY="base64:igwuJltoOFVNDaqhKwFBJpx0jnI8HR6XHxY6taBB9LY="
 
