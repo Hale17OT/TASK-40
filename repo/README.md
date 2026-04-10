@@ -10,17 +10,11 @@ An offline-first, on-premise restaurant ordering system with promotion-aware che
 ## Quick Start
 
 ```bash
-# 1. Copy and configure environment secrets
-cp .env.example .env
-# Edit .env — set these required values:
-#   APP_KEY          (generate with: docker compose run --rm app php artisan key:generate --show)
-#   DB_PASSWORD      (choose a strong password)
-#   PAYMENT_HMAC_KEY (generate with: openssl rand -hex 32)
-#   DEVICE_FINGERPRINT_SALT (generate with: openssl rand -hex 16)
-
-# 2. Start services
+# Start services (no .env file needed — secrets are auto-generated at runtime)
 docker compose up --build -d
 ```
+
+> **Note:** `APP_KEY`, `PAYMENT_HMAC_KEY`, and `DEVICE_FINGERPRINT_SALT` are automatically generated on first startup. To provide your own values, set them as environment variables before running `docker compose up`.
 
 App available at **http://localhost:8080**
 
