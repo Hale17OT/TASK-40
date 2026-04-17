@@ -116,11 +116,11 @@ test.describe('Price Range Filter', () => {
 test.describe('Allergen Filters', () => {
   test('allergen filter section exists with checkboxes', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('text=Hide Allergens')).toBeVisible();
+    await expect(page.locator('text=Dietary Filters')).toBeVisible();
     // Check that checkbox inputs exist in the allergen section
-    const nutCheckbox = page.locator('aside label').filter({ hasText: 'Contains Nuts' });
+    const nutCheckbox = page.locator('aside label').filter({ hasText: 'No Nuts' });
     await expect(nutCheckbox).toBeVisible();
-    const glutenCheckbox = page.locator('aside label').filter({ hasText: 'Contains Gluten' });
+    const glutenCheckbox = page.locator('aside label').filter({ hasText: 'Gluten-Free' });
     await expect(glutenCheckbox).toBeVisible();
   });
 
@@ -132,7 +132,7 @@ test.describe('Allergen Filters', () => {
     const beforeTotal = beforeMatch ? parseInt(beforeMatch[1]) : 0;
 
     // Click the checkbox label in the sidebar
-    await page.locator('aside label').filter({ hasText: 'Contains Nuts' }).click();
+    await page.locator('aside label').filter({ hasText: 'No Nuts' }).click();
     await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const after = await page.textContent('body') || '';
     const afterMatch = after.match(/of (\d+) items/);

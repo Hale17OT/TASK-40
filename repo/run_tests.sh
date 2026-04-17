@@ -69,6 +69,11 @@ echo "--- Preparing for E2E Tests ---"
 docker compose exec -T app php artisan migrate:fresh --force --seed 2>/dev/null
 # Clear rate-limit counters to prevent CAPTCHA accumulation
 docker compose exec -T app php artisan tinker --execute="DB::table('cache')->truncate();" 2>/dev/null || true
+# Whitelist the Docker bridge subnet so Playwright traffic isn't rate-limited
+# or CAPTCHA-blocked during the long E2E run. This is test-environment-only:
+# production seeding never inserts this entry. 172.16.0.0/12 covers every
+# Docker bridge network range (172.17.x, 172.18.x, etc.).
+docker compose exec -T app php artisan tinker --execute="DB::table('security_whitelists')->insert(['type' => 'ip', 'value' => '172.16.0.0/12', 'reason' => 'E2E test traffic', 'created_at' => now(), 'updated_at' => now()]);" 2>/dev/null || true
 # Ensure storage permissions
 docker compose exec -T app chmod -R 777 storage bootstrap/cache 2>/dev/null || true
 
