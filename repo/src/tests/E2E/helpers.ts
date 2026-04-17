@@ -25,10 +25,23 @@ export async function loginAs(page: Page, username: string, password: string): P
     }
   }
 
-  await page.click('button[type="submit"]');
-  await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+  // Wait for the Livewire POST response explicitly. Without this, page.click()
+  // returns before the POST is even sent, and waitForLoadState('networkidle')
+  // returns immediately because no requests are in flight at call time. The
+  // test then asserts on URL, fails, and Playwright closes the page mid-POST,
+  // producing nginx 499 responses and a false "login failed" verdict.
+  const responsePromise = page.waitForResponse(
+    r => /\/livewire[^\/]*\/update/.test(r.url()) && r.request().method() === 'POST',
+    { timeout: 15000 }
+  ).catch(() => null);
 
-  // Check if we left the login page
+  await page.click('button[type="submit"]');
+  await responsePromise;
+
+  // After Livewire's POST returns, JS executes window.location.href for the
+  // redirect. Give the navigation a moment to settle.
+  await page.waitForURL(url => !url.toString().includes('/login'), { timeout: 5000 }).catch(() => {});
+
   const currentUrl = page.url();
   return !currentUrl.includes('/login');
 }
