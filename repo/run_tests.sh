@@ -4,23 +4,39 @@ set -e
 echo "=== HarborBite Test Suite ==="
 echo ""
 
-# Wait for the app container to finish startup (composer install, migrations, seeding)
-echo "Waiting for app container to be ready..."
-for i in $(seq 1 120); do
+# Wait for the app container to finish startup:
+#   - composer install (123 dev packages on a cold volume mount)
+#   - migrations
+#   - seeding
+#   - vite asset build
+# This can legitimately take 5-10 minutes on a cold build in CI. Use a
+# generous timeout (20 minutes) and poll every 5 seconds.
+echo "Waiting for app container to be ready (up to 20 minutes on cold build)..."
+MAX_WAIT=1200   # seconds
+INTERVAL=5      # seconds
+ELAPSED=0
+READY=0
+while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
     if docker compose exec -T app test -f vendor/autoload.php 2>/dev/null; then
-        # Also wait for "HarborBite Ready" signal (migrations + seeding done)
         if docker compose logs app 2>/dev/null | grep -q "HarborBite Ready"; then
-            echo "App container is ready."
+            echo "App container is ready (after ${ELAPSED}s)."
+            READY=1
             break
         fi
     fi
-    if [ "$i" -eq 120 ]; then
-        echo "ERROR: App container did not become ready within 120 seconds."
-        docker compose logs app
-        exit 1
+    sleep "$INTERVAL"
+    ELAPSED=$((ELAPSED + INTERVAL))
+    # Progress heartbeat every 30s
+    if [ $((ELAPSED % 30)) -eq 0 ]; then
+        echo "  ... still waiting (${ELAPSED}s elapsed)"
     fi
-    sleep 1
 done
+
+if [ "$READY" -ne 1 ]; then
+    echo "ERROR: App container did not become ready within ${MAX_WAIT} seconds."
+    docker compose logs app
+    exit 1
+fi
 
 # Test APP_KEY (valid 32-byte key for encryption in test suite)
 TEST_APP_KEY="base64:igwuJltoOFVNDaqhKwFBJpx0jnI8HR6XHxY6taBB9LY="
