@@ -13,30 +13,62 @@ beforeEach(function () {
     ]);
 });
 
-test('GET /api/menu/search returns menu items', function () {
+test('GET /api/menu/search returns menu items with full structure', function () {
     $response = $this->getJson('/api/menu/search');
     $response->assertStatus(200);
-    $response->assertJsonStructure(['data', 'query']);
+    $response->assertJsonStructure([
+        'data' => ['items', 'total', 'trending'],
+        'query' => ['keyword', 'sort', 'page', 'per_page'],
+    ]);
+
+    $body = $response->json();
+    expect($body['data']['items'])->toBeArray();
+    expect($body['data']['total'])->toBeInt();
+    expect($body['query']['sort'])->toBe('relevance');
+    expect($body['query']['page'])->toBe(1);
 });
 
-test('GET /api/menu/search with keyword filters results', function () {
+test('GET /api/menu/search with keyword filters results to matching items only', function () {
     $response = $this->getJson('/api/menu/search?keyword=burger');
     $response->assertStatus(200);
+
+    $items = $response->json('data.items');
+    expect($items)->toBeArray();
+    foreach ($items as $item) {
+        expect(strtolower($item['name'] . ' ' . $item['description']))->toContain('burger');
+    }
+    expect($response->json('query.keyword'))->toBe('burger');
 });
 
-test('GET /api/menu/categories returns categories', function () {
+test('GET /api/menu/categories returns the seeded categories in order', function () {
     $response = $this->getJson('/api/menu/categories');
     $response->assertStatus(200);
-    $response->assertJsonStructure(['data']);
+    $response->assertJsonStructure(['data' => [['id', 'name']]]);
+
+    $categories = $response->json('data');
+    expect($categories)->toHaveCount(2);
+    $names = array_column($categories, 'name');
+    expect($names)->toContain('Burgers');
+    expect($names)->toContain('Drinks');
 });
 
-test('GET /api/menu/{id} returns single item', function () {
+test('GET /api/menu/{id} returns the full item payload', function () {
     $response = $this->getJson('/api/menu/1');
     $response->assertStatus(200);
-    $response->assertJsonStructure(['data']);
+    $response->assertJsonStructure([
+        'data' => ['id', 'sku', 'name', 'price', 'tax_category'],
+    ]);
+
+    $data = $response->json('data');
+    expect($data['id'])->toBe(1);
+    expect($data['sku'])->toBe('B-001');
+    expect($data['name'])->toBe('Classic Burger');
+    expect((float) $data['price'])->toBe(12.99);
 });
 
-test('GET /api/menu/{id} returns 404 for non-existent item', function () {
+test('GET /api/menu/{id} returns JSON 404 with a message for missing items', function () {
     $response = $this->getJson('/api/menu/999');
     $response->assertStatus(404);
+    $response->assertJsonStructure(['message']);
+    expect($response->json('message'))->toContain('not found');
 });

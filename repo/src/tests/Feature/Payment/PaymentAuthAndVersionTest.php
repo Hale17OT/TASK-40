@@ -28,32 +28,49 @@ beforeEach(function () {
 
 // --- Payment role authorization ---
 
-test('kitchen staff cannot create payment intent (403)', function () {
+test('kitchen staff cannot create payment intent (403) with FORBIDDEN error_code', function () {
     $order = (new \App\Application\Order\CreateOrderUseCase())->execute(1);
 
-    $this->actingAs(User::find(3))
-        ->postJson('/api/payments/intent', ['order_id' => $order['id']])
-        ->assertStatus(403);
+    $response = $this->actingAs(User::find(3))
+        ->postJson('/api/payments/intent', ['order_id' => $order['id']]);
+
+    $response->assertStatus(403);
+    $response->assertJsonStructure(['message', 'error_code']);
+    expect($response->json('error_code'))->toBe('FORBIDDEN');
 });
 
-test('kitchen staff cannot confirm payment (403)', function () {
-    $this->actingAs(User::find(3))
+test('kitchen staff cannot confirm payment (403) with FORBIDDEN error_code', function () {
+    $response = $this->actingAs(User::find(3))
         ->postJson('/api/payments/confirm', [
             'reference' => 'test',
             'hmac_signature' => 'test',
             'nonce' => 'test',
             'method' => 'cash',
             'expected_version' => 1,
-        ])
-        ->assertStatus(403);
+        ]);
+
+    $response->assertStatus(403);
+    $response->assertJsonStructure(['message', 'error_code']);
+    expect($response->json('error_code'))->toBe('FORBIDDEN');
 });
 
-test('cashier can create payment intent', function () {
+test('cashier can create payment intent returning reference, nonce, and expiry', function () {
     $order = (new \App\Application\Order\CreateOrderUseCase())->execute(1);
 
-    $this->actingAs(User::find(2))
-        ->postJson('/api/payments/intent', ['order_id' => $order['id']])
-        ->assertStatus(201);
+    $response = $this->actingAs(User::find(2))
+        ->postJson('/api/payments/intent', ['order_id' => $order['id']]);
+
+    $response->assertStatus(201);
+    $response->assertJsonStructure([
+        'data' => ['reference', 'nonce', 'hmac_signature', 'amount', 'expires_at', 'status'],
+    ]);
+
+    $data = $response->json('data');
+    expect($data['status'])->toBe('pending');
+    expect($data['reference'])->toBeString()->not->toBeEmpty();
+    expect($data['nonce'])->toBeString()->not->toBeEmpty();
+    expect($data['hmac_signature'])->toBeString()->toHaveLength(64);
+    expect((float) $data['amount'])->toBeGreaterThan(0);
 });
 
 // --- Payment confirm requires expected_version ---

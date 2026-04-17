@@ -67,18 +67,16 @@ test('blocked search returns location-scoped trending suggestions', function () 
     DB::table('banned_words')->insert([
         ['word' => 'scam', 'created_at' => now(), 'updated_at' => now()],
     ]);
+    \Illuminate\Support\Facades\Cache::forget('banned_words');
 
-    $bannedWords = DB::table('banned_words')->pluck('word')->toArray();
-    $filter = new \App\Domain\Risk\ProfanityFilter($bannedWords);
-    app()->instance(\App\Domain\Risk\ProfanityFilter::class, $filter);
+    $response = $this->getJson('/api/menu/search?keyword=scam&location_id=10');
+    $response->assertStatus(200);
 
-    $useCase = app(SearchMenuUseCase::class);
-    $result = $useCase->execute(new SearchQuery(keyword: 'scam', locationId: 10));
-
-    expect($result['blocked'])->toBeTrue();
-    expect($result['trending'])->toContain('loc10-burger');
-    expect($result['trending'])->not->toContain('global-trend-1');
-    expect($result['trending'])->not->toContain('loc20-salad');
+    $data = $response->json('data');
+    expect($data['blocked'])->toBeTrue();
+    expect($data['trending'])->toContain('loc10-burger');
+    expect($data['trending'])->not->toContain('global-trend-1');
+    expect($data['trending'])->not->toContain('loc20-salad');
 });
 
 test('validation error returns location-scoped trending terms', function () {

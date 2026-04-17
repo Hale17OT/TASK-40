@@ -6,7 +6,7 @@ import { Page, expect } from '@playwright/test';
  */
 export async function loginAs(page: Page, username: string, password: string): Promise<boolean> {
   await page.goto('/login');
-  await page.waitForTimeout(1000);
+  await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
 
   await page.fill('#username', username);
   await page.fill('#password', password);
@@ -26,7 +26,7 @@ export async function loginAs(page: Page, username: string, password: string): P
   }
 
   await page.click('button[type="submit"]');
-  await page.waitForTimeout(6000);
+  await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
 
   // Check if we left the login page
   const currentUrl = page.url();
@@ -40,6 +40,6 @@ export async function loginAs(page: Page, username: string, password: string): P
 export async function authenticatedGoto(page: Page, username: string, password: string, path: string): Promise<string> {
   await loginAs(page, username, password);
   await page.goto(path);
-  await page.waitForTimeout(2000);
+  await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
   return await page.textContent('body') || '';
 }

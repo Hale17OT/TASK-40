@@ -18,7 +18,7 @@ test.describe('Authentication Error Paths', () => {
     await page.fill('#username', 'baduser');
     await page.fill('#password', 'badpass');
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(5000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     await expect(page.locator('#username')).toBeVisible();
     const hasError = await page.locator('.text-red-600').isVisible().catch(() => false);
     const hasErrorText = await page.locator('text=Invalid').isVisible().catch(() => false);

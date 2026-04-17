@@ -28,6 +28,7 @@ class MenuController extends Controller
             sort: $request->input('sort', 'relevance'),
             page: (int) $request->input('page', 1),
             perPage: (int) $request->input('per_page', config('harborbite.search.results_per_page', 20)),
+            locationId: $request->has('location_id') ? (int) $request->input('location_id') : null,
         );
 
         $results = $this->searchMenu->execute($query);

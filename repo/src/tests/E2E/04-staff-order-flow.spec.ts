@@ -25,7 +25,7 @@ test.describe('Staff Order Queue', () => {
   test('staff orders page loads after login', async ({ page }) => {
     await loginAs(page, 'cashier', 'cashier123');
     await page.goto('/staff/orders');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Active Orders') || content.includes('No orders') || content.includes('Logout')).toBeTruthy();
   });
@@ -33,7 +33,7 @@ test.describe('Staff Order Queue', () => {
   test('order page has status filter tabs', async ({ page }) => {
     await loginAs(page, 'cashier', 'cashier123');
     await page.goto('/staff/orders');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Pending') && content.includes('Preparing') && content.includes('Served')).toBeTruthy();
   });
@@ -41,7 +41,7 @@ test.describe('Staff Order Queue', () => {
   test('order page shows Settled and Canceled tabs', async ({ page }) => {
     await loginAs(page, 'cashier', 'cashier123');
     await page.goto('/staff/orders');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Settled') && content.includes('Canceled')).toBeTruthy();
   });
@@ -49,14 +49,14 @@ test.describe('Staff Order Queue', () => {
   test('staff page shows logout button', async ({ page }) => {
     await loginAs(page, 'cashier', 'cashier123');
     await page.goto('/staff/orders');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     await expect(page.locator('text=Logout')).toBeVisible();
   });
 
   test('staff page uses Livewire for real-time updates', async ({ page }) => {
     await loginAs(page, 'cashier', 'cashier123');
     await page.goto('/staff/orders');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const html = await page.content();
     // wire:poll is present when orders exist; wire:id is always present for Livewire
     expect(html.includes('wire:id') || html.includes('wire:poll')).toBeTruthy();
@@ -65,7 +65,7 @@ test.describe('Staff Order Queue', () => {
   test('staff page shows role indicator', async ({ page }) => {
     await loginAs(page, 'cashier', 'cashier123');
     await page.goto('/staff/orders');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('cashier') || content.includes('Cashier')).toBeTruthy();
   });

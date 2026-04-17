@@ -5,7 +5,7 @@ test.describe('Admin Dashboard', () => {
   test('dashboard loads with analytics widgets', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/dashboard');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Total GMV')).toBeTruthy();
     expect(content.includes('Total Sessions')).toBeTruthy();
@@ -16,7 +16,7 @@ test.describe('Admin Dashboard', () => {
   test('dashboard has conversion funnel', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/dashboard');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Conversion Funnel')).toBeTruthy();
     expect(content.includes('Page Views')).toBeTruthy();
@@ -26,7 +26,7 @@ test.describe('Admin Dashboard', () => {
   test('dashboard has date range picker', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/dashboard');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const dateInputs = page.locator('input[type="date"]');
     expect(await dateInputs.count()).toBeGreaterThanOrEqual(2);
   });
@@ -34,7 +34,7 @@ test.describe('Admin Dashboard', () => {
   test('dashboard has daily GMV section', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/dashboard');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Daily GMV')).toBeTruthy();
   });
@@ -42,7 +42,7 @@ test.describe('Admin Dashboard', () => {
   test('dashboard has trending terms management', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/dashboard');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Pinned Trending Terms')).toBeTruthy();
     expect(content.includes('Pin Term')).toBeTruthy();
@@ -54,7 +54,7 @@ test.describe('Admin Menu Management', () => {
   test('menu management page loads', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/menu');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Menu') || content.includes('Categor') || content.includes('Item')).toBeTruthy();
   });
@@ -62,7 +62,7 @@ test.describe('Admin Menu Management', () => {
   test('menu page has form inputs for creating items', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/menu');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const inputCount = await page.locator('input').count();
     expect(inputCount).toBeGreaterThan(0);
   });
@@ -70,7 +70,7 @@ test.describe('Admin Menu Management', () => {
   test('menu page shows existing items or categories', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/menu');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     // Should show seeded data
     expect(content.includes('Burger') || content.includes('Burgers') || content.includes('BRG')).toBeTruthy();
@@ -81,7 +81,7 @@ test.describe('Admin Promotion Management', () => {
   test('promotions page loads', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/promotions');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Promotion') || content.includes('Discount') || content.includes('BOGO')).toBeTruthy();
   });
@@ -89,7 +89,7 @@ test.describe('Admin Promotion Management', () => {
   test('promotions page shows seeded promotions', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/promotions');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('10%') || content.includes('BOGO') || content.includes('percentage_off')).toBeTruthy();
   });
@@ -97,7 +97,7 @@ test.describe('Admin Promotion Management', () => {
   test('promotions page has type selector and form', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/promotions');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const selects = await page.locator('select').count();
     expect(selects).toBeGreaterThan(0);
   });
@@ -107,7 +107,7 @@ test.describe('Admin User Management', () => {
   test('users page loads with seeded users', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/users');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('admin')).toBeTruthy();
     expect(content.includes('cashier')).toBeTruthy();
@@ -116,7 +116,7 @@ test.describe('Admin User Management', () => {
   test('users page has role selector', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/users');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const selects = await page.locator('select').count();
     expect(selects).toBeGreaterThan(0);
   });
@@ -124,7 +124,7 @@ test.describe('Admin User Management', () => {
   test('users page has password and name inputs', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/users');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const inputs = await page.locator('input').count();
     expect(inputs).toBeGreaterThanOrEqual(3); // name, username, password at minimum
   });
@@ -134,7 +134,7 @@ test.describe('Admin Security', () => {
   test('security page has blacklist and whitelist sections', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/security');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Blacklist')).toBeTruthy();
     expect(content.includes('Whitelist')).toBeTruthy();
@@ -143,7 +143,7 @@ test.describe('Admin Security', () => {
   test('security page has type selectors', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/security');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const selects = await page.locator('select').count();
     expect(selects).toBeGreaterThanOrEqual(2);
   });
@@ -151,7 +151,7 @@ test.describe('Admin Security', () => {
   test('security audit log loads', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/security/audit');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Security Audit Log')).toBeTruthy();
     expect(content.includes('Rule Hit Logs')).toBeTruthy();
@@ -161,7 +161,7 @@ test.describe('Admin Security', () => {
   test('audit log has type filter buttons', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/security/audit');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('All')).toBeTruthy();
     expect(content.includes('Rate Limit')).toBeTruthy();
@@ -180,7 +180,7 @@ test.describe('Admin Navigation', () => {
   test('admin sidebar has all nav links', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/dashboard');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Dashboard')).toBeTruthy();
     expect(content.includes('Menu')).toBeTruthy();
@@ -193,14 +193,14 @@ test.describe('Admin Navigation', () => {
   test('admin sidebar shows logout', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/dashboard');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     await expect(page.locator('text=Logout').first()).toBeVisible();
   });
 
   test('admin sidebar shows Admin badge', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/admin/dashboard');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     await expect(page.locator('text=Admin').first()).toBeVisible();
   });
 });

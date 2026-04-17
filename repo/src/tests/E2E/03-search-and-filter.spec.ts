@@ -10,30 +10,30 @@ test.describe('Search', () => {
 
   test('typing triggers live search with results', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     await page.locator('input[placeholder="Search menu..."]').fill('burger');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Burger') || content.includes('Showing')).toBeTruthy();
   });
 
   test('search with no results shows empty message', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     await page.locator('input[placeholder="Search menu..."]').fill('xyznonexistent');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('No items') || content.includes('0')).toBeTruthy();
   });
 
   test('clearing search shows all items again', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const input = page.locator('input[placeholder="Search menu..."]');
     await input.fill('burger');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     await input.fill('');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Showing') || content.includes('Add to Cart')).toBeTruthy();
   });
@@ -57,22 +57,22 @@ test.describe('Category Filter', () => {
 
   test('selecting category filters results', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     await page.locator('select').first().selectOption({ index: 1 });
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Showing')).toBeTruthy();
   });
 
   test('All Categories shows everything', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     // Select a specific category first
     await page.locator('select').first().selectOption({ index: 1 });
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     // Then select "All Categories"
     await page.locator('select').first().selectOption({ index: 0 });
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Showing')).toBeTruthy();
   });
@@ -87,24 +87,24 @@ test.describe('Price Range Filter', () => {
 
   test('setting price range filters results', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     await page.locator('input[placeholder="Min"]').fill('5');
     await page.locator('input[placeholder="Max"]').fill('10');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Showing')).toBeTruthy();
   });
 
   test('narrow price range shows fewer items', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const fullContent = await page.textContent('body') || '';
     const fullMatch = fullContent.match(/of (\d+) items/);
     const fullTotal = fullMatch ? parseInt(fullMatch[1]) : 999;
 
     await page.locator('input[placeholder="Min"]').fill('12');
     await page.locator('input[placeholder="Max"]').fill('13');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const filteredContent = await page.textContent('body') || '';
     const filteredMatch = filteredContent.match(/of (\d+) items/);
     const filteredTotal = filteredMatch ? parseInt(filteredMatch[1]) : 999;
@@ -126,14 +126,14 @@ test.describe('Allergen Filters', () => {
 
   test('toggling nut filter changes results', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const before = await page.textContent('body') || '';
     const beforeMatch = before.match(/of (\d+) items/);
     const beforeTotal = beforeMatch ? parseInt(beforeMatch[1]) : 0;
 
     // Click the checkbox label in the sidebar
     await page.locator('aside label').filter({ hasText: 'Contains Nuts' }).click();
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const after = await page.textContent('body') || '';
     const afterMatch = after.match(/of (\d+) items/);
     const afterTotal = afterMatch ? parseInt(afterMatch[1]) : 0;
@@ -161,9 +161,9 @@ test.describe('Sort', () => {
 
   test('changing sort option updates page', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     await page.locator('select').last().selectOption('price_asc');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Showing')).toBeTruthy();
   });
@@ -172,7 +172,7 @@ test.describe('Sort', () => {
 test.describe('Trending Searches', () => {
   test('trending section or buttons visible when no search', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const hasTrending = await page.locator('text=Trending Searches').isVisible().catch(() => false);
     const hasButtons = await page.locator('button').filter({ hasText: /burger|salad|fries/i }).first().isVisible().catch(() => false);
     expect(hasTrending || hasButtons).toBeTruthy();
@@ -180,7 +180,7 @@ test.describe('Trending Searches', () => {
 
   test('clicking trending term populates search', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     // Look for trending buttons in the main content area (not sidebar)
     const trendingSection = page.locator('text=Trending Searches');
     const hasTrending = await trendingSection.isVisible().catch(() => false);
@@ -189,7 +189,7 @@ test.describe('Trending Searches', () => {
       const btn = page.locator('button').filter({ hasText: /^burger$/i }).first();
       if (await btn.isVisible().catch(() => false)) {
         await btn.click();
-        await page.waitForTimeout(2000);
+        await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
         const val = await page.locator('input[placeholder="Search menu..."]').inputValue();
         expect(val.toLowerCase()).toContain('burger');
         return;
@@ -208,11 +208,11 @@ test.describe('Clear Filters', () => {
 
   test('clearing filters resets price range', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     await page.locator('input[placeholder="Min"]').fill('10');
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     await page.locator('button:has-text("Clear All Filters")').click();
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const val = await page.locator('input[placeholder="Min"]').inputValue();
     expect(val).toBe('');
   });

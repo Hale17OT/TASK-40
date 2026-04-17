@@ -39,7 +39,7 @@ test.describe('Manager Reconciliation', () => {
   test('reconciliation page loads for manager', async ({ page }) => {
     await loginAs(page, 'manager', 'manager123');
     await page.goto('/manager/reconciliation');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Reconciliation') || content.includes('Incident') || content.includes('tickets')).toBeTruthy();
   });
@@ -47,7 +47,7 @@ test.describe('Manager Reconciliation', () => {
   test('reconciliation page loads for admin', async ({ page }) => {
     await loginAs(page, 'admin', 'admin123');
     await page.goto('/manager/reconciliation');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Reconciliation') || content.includes('Incident') || content.includes('tickets')).toBeTruthy();
   });
@@ -55,7 +55,7 @@ test.describe('Manager Reconciliation', () => {
   test('reconciliation has status filter', async ({ page }) => {
     await loginAs(page, 'manager', 'manager123');
     await page.goto('/manager/reconciliation');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const selects = await page.locator('select').count();
     expect(selects).toBeGreaterThanOrEqual(1);
   });
@@ -87,7 +87,7 @@ test.describe('Checkout Flow Structure', () => {
 
   test('checkout shows empty state or order review', async ({ page }) => {
     await page.goto('/checkout');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('empty') || content.includes('Place Order') || content.includes('Review')).toBeTruthy();
   });

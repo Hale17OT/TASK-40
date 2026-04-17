@@ -65,7 +65,9 @@ services:
       - harborbite
 
   playwright:
-    image: mcr.microsoft.com/playwright:v1.50.0-jammy
+    build:
+      context: .
+      dockerfile: docker/playwright/Dockerfile
     working_dir: /tests
     volumes:
       - ./src/tests/E2E:/tests

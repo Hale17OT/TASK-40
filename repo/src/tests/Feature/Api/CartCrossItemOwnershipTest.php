@@ -23,28 +23,41 @@ beforeEach(function () {
     ]);
 });
 
-test('updating a cart item from a foreign cart has no effect', function () {
+test('updating a cart item from a foreign cart returns 200 but does NOT modify the foreign row', function () {
     // Create own cart first
     $this->postJson('/api/cart/items', ['menu_item_id' => 1])->assertStatus(201);
 
     // Try to update a foreign cart item (id=500 belongs to cart 99)
-    $this->patchJson('/api/cart/items/500', ['quantity' => 10])
-        ->assertStatus(200);
+    $response = $this->patchJson('/api/cart/items/500', ['quantity' => 10]);
+    $response->assertStatus(200);
+    $response->assertJsonStructure(['message']);
 
     // Verify the foreign cart item was NOT modified
     $foreignItem = DB::table('cart_items')->where('id', 500)->first();
-    expect($foreignItem->quantity)->toBe(3);
+    expect($foreignItem)->not->toBeNull();
+    expect((int) $foreignItem->quantity)->toBe(3);
+    expect((float) $foreignItem->unit_price_snapshot)->toBe(12.99);
+    expect((int) $foreignItem->cart_id)->toBe(99); // still bound to foreign cart
+
+    // Own cart items should be untouched
+    $ownCart = DB::table('carts')->where('session_id', session()->getId())->first();
+    $ownItems = DB::table('cart_items')->where('cart_id', $ownCart->id)->get();
+    expect($ownItems)->toHaveCount(1);
+    expect((int) $ownItems->first()->quantity)->toBe(1); // unchanged by the foreign attempt
 });
 
-test('deleting a cart item from a foreign cart has no effect', function () {
+test('deleting a cart item from a foreign cart returns 200 but does NOT delete the foreign row', function () {
     // Create own cart first
     $this->postJson('/api/cart/items', ['menu_item_id' => 1])->assertStatus(201);
 
     // Try to delete a foreign cart item (id=500 belongs to cart 99)
-    $this->deleteJson('/api/cart/items/500')
-        ->assertStatus(200);
+    $response = $this->deleteJson('/api/cart/items/500');
+    $response->assertStatus(200);
+    $response->assertJsonStructure(['message']);
 
-    // Verify the foreign cart item still exists
+    // Verify the foreign cart item still exists with original values
     $foreignItem = DB::table('cart_items')->where('id', 500)->first();
     expect($foreignItem)->not->toBeNull();
+    expect((int) $foreignItem->cart_id)->toBe(99);
+    expect((int) $foreignItem->quantity)->toBe(3);
 });

@@ -13,21 +13,21 @@ test.describe('Menu Browsing', () => {
 
   test('menu displays item cards with prices', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(/\$\d+\.\d{2}/.test(content)).toBeTruthy();
   });
 
   test('menu items have Add to Cart buttons', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const count = await page.locator('button:has-text("Add to Cart")').count();
     expect(count).toBeGreaterThan(0);
   });
 
   test('menu shows attribute badges', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     const hasBadge = content.includes('Gluten-Free') || content.includes('Contains Nuts') || content.includes('Spicy');
     expect(hasBadge).toBeTruthy();
@@ -35,7 +35,7 @@ test.describe('Menu Browsing', () => {
 
   test('menu shows category names', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     const hasCat = content.includes('Burgers') || content.includes('Salads') || content.includes('Sides');
     expect(hasCat).toBeTruthy();
@@ -43,14 +43,14 @@ test.describe('Menu Browsing', () => {
 
   test('menu shows item count', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('Showing')).toBeTruthy();
   });
 
   test('menu item descriptions are visible', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     // Seeded items have descriptions
     const hasDesc = content.includes('beef') || content.includes('patty') || content.includes('fries') || content.includes('salad');
@@ -89,7 +89,7 @@ test.describe('Checkout', () => {
 
   test('checkout shows empty or order review state', async ({ page }) => {
     await page.goto('/checkout');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     const hasContent = content.includes('empty') || content.includes('Browse Menu') || content.includes('Place Order') || content.includes('Review');
     expect(hasContent).toBeTruthy();
@@ -109,7 +109,7 @@ test.describe('Order Tracking', () => {
 
   test('order tracker shows status or not-found', async ({ page }) => {
     await page.goto('/order/999999');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
     const content = await page.textContent('body') || '';
     expect(content.includes('not found') || content.includes('Order Status')).toBeTruthy();
   });

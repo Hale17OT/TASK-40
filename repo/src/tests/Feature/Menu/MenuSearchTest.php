@@ -39,18 +39,16 @@ test('menu search returns results for keyword', function () {
     $response->assertStatus(200);
 });
 
-test('banned word returns blocked message via livewire', function () {
-    // Rebuild the ProfanityFilter with fresh banned words from DB
-    $bannedWords = DB::table('banned_words')->pluck('word')->toArray();
-    $filter = new \App\Domain\Risk\ProfanityFilter($bannedWords);
-    app()->instance(\App\Domain\Risk\ProfanityFilter::class, $filter);
+test('banned word returns blocked message via API', function () {
+    \Illuminate\Support\Facades\Cache::forget('banned_words');
 
-    $useCase = app(\App\Application\Search\SearchMenuUseCase::class);
-    $result = $useCase->execute(new \App\Domain\Search\SearchQuery(keyword: 'scam'));
+    $response = $this->getJson('/api/menu/search?keyword=scam');
+    $response->assertStatus(200);
 
-    expect($result['blocked'])->toBeTrue();
-    expect($result['block_message'])->toContain('not allowed');
-    expect($result['items'])->toBeEmpty();
+    $data = $response->json('data');
+    expect($data['blocked'])->toBeTrue();
+    expect($data['block_message'])->toContain('not allowed');
+    expect($data['items'])->toBeEmpty();
 });
 
 test('search returns only active items', function () {

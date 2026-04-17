@@ -1,5 +1,7 @@
 # HarborBite — Offline Restaurant Ordering & Risk Management System
 
+**Project Type:** Fullstack web application (server-rendered UI + REST API, single deployment).
+
 An offline-first, on-premise restaurant ordering system with promotion-aware checkout, secure payment capture, and end-to-end fraud controls. Built with Laravel 13 + Livewire 4 + Alpine.js + Tailwind CSS + PostgreSQL, designed to run entirely on a local restaurant network.
 
 ## Prerequisites
@@ -11,14 +13,26 @@ An offline-first, on-premise restaurant ordering system with promotion-aware che
 
 ```bash
 # Start services (no .env file needed — secrets are auto-generated at runtime)
-docker compose up --build -d
+docker-compose up --build -d
 ```
 
-> **Note:** `APP_KEY`, `PAYMENT_HMAC_KEY`, and `DEVICE_FINGERPRINT_SALT` are automatically generated on first startup. To provide your own values, set them as environment variables before running `docker compose up`.
+> Docker Compose v2 and v1 are both supported; `docker compose up` (space) and `docker-compose up` (hyphen) are equivalent here.
+
+> **Note:** `APP_KEY`, `PAYMENT_HMAC_KEY`, and `DEVICE_FINGERPRINT_SALT` are automatically generated on first startup. To provide your own values, set them as environment variables before running `docker-compose up`.
 
 App available at **http://localhost:8080**
 
 First startup runs migrations and seeds automatically.
+
+## Verify the App Is Running
+
+Once containers are up, verify the system is working:
+
+1. **Kiosk UI** — Open `http://localhost:8080/` in a browser. You should see the menu browser with seeded items (burgers, salads, drinks).
+2. **REST API health** — `curl http://localhost:8080/api/time-sync` returns JSON with current server time.
+3. **Menu API** — `curl http://localhost:8080/api/menu/search` returns seeded menu items.
+4. **Staff login** — Navigate to `http://localhost:8080/login`, sign in with the `admin` credentials below. You will be forced through the password-change flow on first login.
+5. **Order a meal** — From the kiosk UI, add items to cart → checkout → pay. You will receive a tracking URL (`/order/{token}`) that polls order status in real time.
 
 ### Default Credentials (Non-Production Only)
 
@@ -54,12 +68,14 @@ Runs three test stages:
 
 ### Running tests manually
 
-```bash
-# Unit + Feature (inside Docker)
-docker compose exec app php artisan test
+Every stage runs **inside Docker**. No host-side PHP, Node, npm, Playwright, browser, or any other install is required at any time. The Playwright image is pre-built with dependencies and browsers baked in at image-build time — nothing is installed at runtime.
 
-# E2E only (requires app running + Playwright installed)
-cd src/tests/E2E && npx playwright test
+```bash
+# Unit + Feature (inside the app container)
+docker-compose exec app php artisan test
+
+# E2E (inside the pre-built Docker playwright service under the 'testing' profile)
+docker-compose --profile testing run --rm playwright npx playwright test --reporter=list
 ```
 
 ## Architecture
@@ -131,10 +147,13 @@ src/app/
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | / | None | Menu browser (kiosk) |
+| GET | /menu | None | Menu browser (alias of `/`) |
 | GET | /cart | None | Cart page |
 | GET | /checkout | None | Checkout page (rate-limited) |
 | GET | /order/{trackingToken} | None | Order tracker (token-based) |
 | GET | /login | None | Staff login (rate-limited) |
+| POST | /logout | None | End the current staff session |
+| GET | /password/change | Staff | Forced password-change flow on first login |
 | GET | /staff/orders | Staff | Order queue |
 | GET | /admin/dashboard | Admin | Analytics dashboard |
 | GET | /admin/menu | Admin | Menu item management |
@@ -159,10 +178,12 @@ src/app/
 | DELETE | /api/cart/items/{id} | None | Remove cart item |
 | DELETE | /api/cart | None | Clear cart |
 | POST | /api/orders | None | Create order (returns tracking token) |
-| GET | /api/orders/{token} | None | Track order by token |
+| GET | /api/orders/{token} | None | Track order by token (guest-safe DTO) |
+| GET | /api/orders/{id}/detail | Staff | Full order detail incl. internal IDs and status log |
 | POST | /api/orders/{id}/transition | Staff | Transition order status |
-| POST | /api/payments/intent | Staff | Create payment intent |
-| POST | /api/payments/confirm | Staff | Confirm payment (manager PIN for ambiguous) |
+| POST | /api/orders/{id}/discount | Manager+ | Apply a manual discount (PIN required for >$20) |
+| POST | /api/payments/intent | Cashier+ | Create payment intent |
+| POST | /api/payments/confirm | Cashier+ | Confirm payment (manager PIN for ambiguous) |
 
 ## Services
 

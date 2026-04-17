@@ -112,18 +112,35 @@ test('POST /api/payments/intent works for authenticated staff', function () {
 
 // --- Public endpoints remain accessible ---
 
-test('GET /api/menu/search is accessible without auth', function () {
-    $this->getJson('/api/menu/search')->assertStatus(200);
+test('GET /api/menu/search is accessible without auth and returns search payload', function () {
+    $response = $this->getJson('/api/menu/search');
+    $response->assertStatus(200);
+    $response->assertJsonStructure(['data' => ['items', 'total'], 'query']);
+    expect($response->json('data.items'))->toBeArray();
 });
 
-test('POST /api/cart/items is accessible without auth', function () {
-    $this->postJson('/api/cart/items', ['menu_item_id' => 1])->assertStatus(201);
+test('POST /api/cart/items is accessible without auth and creates a cart row', function () {
+    $response = $this->postJson('/api/cart/items', ['menu_item_id' => 1]);
+    $response->assertStatus(201);
+    $response->assertJsonStructure(['message']);
+
+    $cart = DB::table('carts')->where('session_id', session()->getId())->first();
+    expect($cart)->not->toBeNull();
+    $items = DB::table('cart_items')->where('cart_id', $cart->id)->get();
+    expect($items)->toHaveCount(1);
+    expect((int) $items->first()->menu_item_id)->toBe(1);
 });
 
-test('POST /api/orders is accessible without auth', function () {
+test('POST /api/orders is accessible without auth and returns tracking metadata', function () {
     // Create cart bound to this test session via API
     $this->postJson('/api/cart/items', ['menu_item_id' => 1]);
     $cart = DB::table('carts')->where('session_id', session()->getId())->first();
 
-    $this->postJson('/api/orders', ['cart_id' => $cart->id])->assertStatus(201);
+    $response = $this->postJson('/api/orders', ['cart_id' => $cart->id]);
+    $response->assertStatus(201);
+    $response->assertJsonStructure(['data' => ['id', 'order_number', 'tracking_token', 'status'], 'tracking_url']);
+
+    expect($response->json('data.status'))->toBe('pending_confirmation');
+    expect($response->json('data.tracking_token'))->toBeString()->not->toBeEmpty();
+    expect($response->json('tracking_url'))->toContain('/order/');
 });

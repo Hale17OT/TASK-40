@@ -49,13 +49,22 @@ test('GET /api/orders/{token} returns order by tracking token', function () {
     $response->assertJsonStructure(['data', 'items', 'status_log']);
 });
 
-test('GET /api/orders/{token} returns 404 for invalid token', function () {
+test('GET /api/orders/{token} returns 404 with message for invalid token', function () {
     $response = $this->getJson('/api/orders/nonexistent-token');
     $response->assertStatus(404);
+    $response->assertJsonStructure(['message']);
+    expect($response->json('message'))->toContain('not found');
 });
 
-test('GET /api/time-sync returns server time', function () {
+test('GET /api/time-sync returns server time with timezone and ISO format', function () {
     $response = $this->getJson('/api/time-sync');
     $response->assertStatus(200);
     $response->assertJsonStructure(['server_time', 'server_time_iso', 'timezone']);
+
+    $body = $response->json();
+    expect($body['timezone'])->toBeString()->not->toBeEmpty();
+    // ISO-8601 format check
+    expect($body['server_time_iso'])->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/');
+    // server_time is unix timestamp or ISO string — must be non-empty
+    expect($body['server_time'])->not->toBeNull();
 });
