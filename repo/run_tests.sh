@@ -4,6 +4,12 @@ set -e
 echo "=== HarborBite Test Suite ==="
 echo ""
 
+# Bring the stack up ourselves. The CI harness may have torn down containers
+# from a previous step, so we cannot rely on them already running. This is
+# idempotent — if containers are already up and healthy, compose is a no-op.
+echo "Starting Docker stack (idempotent — no-op if already up)..."
+docker compose up -d --build
+
 # Wait for the app container to finish startup:
 #   - composer install (123 dev packages on a cold volume mount)
 #   - migrations
