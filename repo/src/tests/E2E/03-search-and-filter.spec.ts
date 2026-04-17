@@ -209,10 +209,27 @@ test.describe('Clear Filters', () => {
   test('clearing filters resets price range', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+
+    // priceMin uses wire:model.live.debounce.500ms — wait for the debounced POST
+    // to land server-side before clicking Clear, otherwise Clear's response arrives
+    // first and the still-pending debounced "set priceMin=10" stomps on it.
+    const minResponse = page.waitForResponse(
+      r => /\/livewire[^\/]*\/update/.test(r.url()) && r.request().method() === 'POST',
+      { timeout: 15000 }
+    ).catch(() => null);
     await page.locator('input[placeholder="Min"]').fill('10');
-    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+    await minResponse;
+
+    // Clear All Filters is wire:click — like the login fix, page.click() returns
+    // before the POST is sent, so waitForLoadState('networkidle') reads idle state
+    // immediately. Wait for the actual response, then read the input.
+    const clearResponse = page.waitForResponse(
+      r => /\/livewire[^\/]*\/update/.test(r.url()) && r.request().method() === 'POST',
+      { timeout: 15000 }
+    ).catch(() => null);
     await page.locator('button:has-text("Clear All Filters")').click();
-    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+    await clearResponse;
+
     const val = await page.locator('input[placeholder="Min"]').inputValue();
     expect(val).toBe('');
   });
