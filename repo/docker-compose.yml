@@ -69,8 +69,11 @@ services:
       context: .
       dockerfile: docker/playwright/Dockerfile
     working_dir: /tests
-    volumes:
-      - ./src/tests/E2E:/tests
+    # No host bind-mount: the Dockerfile bakes the test files AND
+    # node_modules into /tests at image build time. Mounting the host
+    # src/tests/E2E over /tests would shadow the baked-in node_modules,
+    # forcing npx to download a fresh playwright at runtime (which then
+    # cannot resolve @playwright/test).
     depends_on:
       - nginx
     environment:

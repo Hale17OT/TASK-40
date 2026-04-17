@@ -47,6 +47,12 @@ fi
 # Test APP_KEY (valid 32-byte key for encryption in test suite)
 TEST_APP_KEY="base64:igwuJltoOFVNDaqhKwFBJpx0jnI8HR6XHxY6taBB9LY="
 
+# Pest 4's side-effects-detector probes .env per test to detect I/O side
+# effects. We ship without an .env (config comes from env vars + phpunit.xml
+# <server> overrides), so the probe emits a per-test warning. Touch an empty
+# .env to silence the noise — phpunit.xml overrides still win.
+docker compose exec -T app touch .env 2>/dev/null || true
+
 # 1. Unit Tests (inside Docker)
 echo "--- Running Unit Tests ---"
 docker compose exec -T -e APP_KEY="$TEST_APP_KEY" app php artisan test --testsuite=Unit
